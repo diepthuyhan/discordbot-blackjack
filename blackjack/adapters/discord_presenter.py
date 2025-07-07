@@ -47,8 +47,7 @@ class DiscordPresenter:
 
         # Hiển thị bài của nhà cái
         hide_dealer_card = game.state != GameState.GAME_OVER
-        dealer_hand_str = self._format_hand(
-            game.dealer, hide_one_card=hide_dealer_card)
+        dealer_hand_str = self._format_hand(game.dealer, hide_one_card=hide_dealer_card)
         dealer_value = (
             game.dealer.hand.value
             if not hide_dealer_card
@@ -108,8 +107,5 @@ class DiscordPresenter:
         if not player_list:
             player_list = "Chưa có ai tham gia..."
 
-        embed.add_field(
-            name="Người chơi đã tham gia:",
-            value=player_list,
-            inline=False)
+        embed.add_field(name="Người chơi đã tham gia:", value=player_list, inline=False)
         return embed

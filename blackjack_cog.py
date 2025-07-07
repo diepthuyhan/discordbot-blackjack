@@ -17,10 +17,8 @@ class BlackjackCog(commands.Cog):
     """Một Cog chứa các lệnh để chơi game Xì Dách."""
 
     def __init__(
-            self,
-            bot: commands.Bot,
-            use_case: GameUseCase,
-            presenter: DiscordPresenter):
+        self, bot: commands.Bot, use_case: GameUseCase, presenter: DiscordPresenter
+    ):
         self.bot = bot
         self.use_case = use_case
         self.presenter = presenter
@@ -30,17 +28,15 @@ class BlackjackCog(commands.Cog):
         self.waiting_room_timeouts = {}  # channel_id: asyncio.Task
         self.logger = logging.getLogger("blackjack-bot.cog")
 
-    async def _waiting_room_timeout(
-            self,
-            channel_id: int,
-            ctx: commands.Context):
+    async def _waiting_room_timeout(self, channel_id: int, ctx: commands.Context):
         await asyncio.sleep(WAITING_ROOM_TIMEOUT)  # timeout lấy từ settings
         game = self.use_case.repo.get_game(channel_id)
         if (
-            game and game.state == GameState.WAITING_FOR_PLAYERS and len(game.players) <= 1
+            game
+            and game.state == GameState.WAITING_FOR_PLAYERS
+            and len(game.players) <= 1
         ):
-            self.logger.info(
-                f"Timeout phòng chờ channel {channel_id}, tự động đóng.")
+            self.logger.info(f"Timeout phòng chờ channel {channel_id}, tự động đóng.")
             self.use_case.end_game(channel_id)
             if channel_id in self.game_starters:
                 del self.game_starters[channel_id]
@@ -205,8 +201,7 @@ class BlackjackCog(commands.Cog):
     async def hit(self, ctx: commands.Context):
         """Rút thêm một lá bài."""
         try:
-            game = self.use_case.player_action(
-                ctx.channel.id, ctx.author.id, "hit")
+            game = self.use_case.player_action(ctx.channel.id, ctx.author.id, "hit")
             embed = self.presenter.create_game_embed(game)
             await ctx.send(embed=embed)
 
@@ -222,8 +217,7 @@ class BlackjackCog(commands.Cog):
     async def stand(self, ctx: commands.Context):
         """Dừng, không rút bài nữa."""
         try:
-            game = self.use_case.player_action(
-                ctx.channel.id, ctx.author.id, "stand")
+            game = self.use_case.player_action(ctx.channel.id, ctx.author.id, "stand")
             embed = self.presenter.create_game_embed(game)
             await ctx.send(embed=embed)
 

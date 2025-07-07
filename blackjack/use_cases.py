@@ -44,11 +44,7 @@ class GameUseCase:
         self.repo.save_game(game)
         return game, True
 
-    def player_action(
-            self,
-            channel_id: int,
-            user_id: int,
-            action: str) -> Game:
+    def player_action(self, channel_id: int, user_id: int, action: str) -> Game:
         """Xử lý hành động 'hit' (rút) hoặc 'stand' (dừng) của người chơi."""
         game = self.repo.get_game(channel_id)
         if not game:

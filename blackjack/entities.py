@@ -200,8 +200,7 @@ class Game:
                 player.is_standing = True  # Tự động dằn bài
 
         # Nếu tất cả người chơi đều có blackjack hoặc quắc, chuyển lượt
-        if all(p.is_standing or p.hand.value >
-               21 for p in self.players.values()):
+        if all(p.is_standing or p.hand.value > 21 for p in self.players.values()):
             self._start_dealer_turn()
         else:
             # Chuyển đến người chơi đầu tiên không bị Blackjack/quắc

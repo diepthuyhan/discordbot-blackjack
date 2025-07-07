@@ -1,4 +1,3 @@
-
 # ==============================================================================
 # File: blackjack/interfaces.py
 # Mô tả: Lớp giao diện (Interfaces) - Định nghĩa các "hợp đồng" (abstract classes)
@@ -7,11 +6,15 @@
 from abc import ABC, abstractmethod
 from typing import Optional
 
+
 # Forward declaration để tránh circular import
-class Game: pass
+class Game:
+    pass
+
 
 class IGameRepository(ABC):
     """Giao diện cho việc lưu trữ và truy xuất trạng thái game."""
+
     @abstractmethod
     def get_game(self, channel_id: int) -> Optional[Game]:
         pass

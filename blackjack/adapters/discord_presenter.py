@@ -1,4 +1,3 @@
-
 # ==============================================================================
 # File: blackjack/adapters/discord_presenter.py
 # Mô tả: Lớp Adapter - Chuyển đổi trạng thái game (từ Entities) thành định dạng
@@ -6,6 +5,7 @@
 # ==============================================================================
 import discord
 from ..entities import Game, GameState, GameResult, Player
+
 
 class DiscordPresenter:
     """Tạo các tin nhắn discord.Embed để hiển thị trạng thái game."""
@@ -15,7 +15,7 @@ class DiscordPresenter:
         if hide_one_card:
             # Chỉ hiển thị lá bài đầu tiên của nhà cái
             return f"[{str(player.hand.cards[0])}] [?]"
-        
+
         cards_str = " ".join([f"[{str(card)}]" for card in player.hand.cards])
         return cards_str
 
@@ -35,10 +35,10 @@ class DiscordPresenter:
         """Tạo một discord.Embed để hiển thị toàn bộ trạng thái ván chơi."""
         if game.state == GameState.WAITING_FOR_PLAYERS:
             return self.create_waiting_embed(game)
-        
+
         title = "♦️ Ván Xì Dách đang diễn ra! ♥️"
         color = discord.Color.gold()
-        
+
         if game.state == GameState.GAME_OVER:
             title = "🏁 Ván Xì Dách đã kết thúc! 🏁"
             color = discord.Color.dark_red()
@@ -47,8 +47,13 @@ class DiscordPresenter:
 
         # Hiển thị bài của nhà cái
         hide_dealer_card = game.state != GameState.GAME_OVER
-        dealer_hand_str = self._format_hand(game.dealer, hide_one_card=hide_dealer_card)
-        dealer_value = game.dealer.hand.value if not hide_dealer_card else game.dealer.hand.cards[0].value
+        dealer_hand_str = self._format_hand(
+            game.dealer, hide_one_card=hide_dealer_card)
+        dealer_value = (
+            game.dealer.hand.value
+            if not hide_dealer_card
+            else game.dealer.hand.cards[0].value
+        )
         dealer_status = ""
         if game.state == GameState.GAME_OVER:
             if game.dealer.hand.value > 21:
@@ -59,19 +64,18 @@ class DiscordPresenter:
         embed.add_field(
             name=f"**Nhà Cái** (Điểm: {dealer_value}{dealer_status})",
             value=f"`{dealer_hand_str}`",
-            inline=False
+            inline=False,
         )
-        embed.add_field(name="-"*30, value="", inline=False)
-
+        embed.add_field(name="-" * 30, value="", inline=False)
 
         # Hiển thị bài của người chơi
         for player in game.players.values():
             player_hand_str = self._format_hand(player)
             player_status = self._get_player_status(game, player)
-            
+
             field_name = f"**{player.name}** (Điểm: {player.hand.value}{player_status})"
             field_value = f"`{player_hand_str}`"
-            
+
             if game.state == GameState.GAME_OVER:
                 result = game.results.get(player.id)
                 if result == GameResult.PLAYER_WINS:
@@ -89,7 +93,7 @@ class DiscordPresenter:
             footer_text = f"Lượt của {current_player.name}. Dùng lệnh `!hit` để rút hoặc `!stand` để dằn."
             embed.set_footer(text=footer_text)
         elif game.state == GameState.GAME_OVER:
-             embed.set_footer(text="Gõ !blackjack để bắt đầu ván mới.")
+            embed.set_footer(text="Gõ !blackjack để bắt đầu ván mới.")
 
         return embed
 
@@ -98,11 +102,14 @@ class DiscordPresenter:
         embed = discord.Embed(
             title="🎲 Phòng chờ Xì Dách 🎲",
             description="Mọi người ơi, vào chơi nào! Gõ `!join` để tham gia.\nChủ phòng gõ `!start` để bắt đầu.",
-            color=discord.Color.green()
+            color=discord.Color.green(),
         )
         player_list = "\n".join([p.name for p in game.players.values()])
         if not player_list:
             player_list = "Chưa có ai tham gia..."
-        
-        embed.add_field(name="Người chơi đã tham gia:", value=player_list, inline=False)
+
+        embed.add_field(
+            name="Người chơi đã tham gia:",
+            value=player_list,
+            inline=False)
         return embed

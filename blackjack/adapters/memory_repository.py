@@ -1,4 +1,3 @@
-
 # ==============================================================================
 # File: blackjack/adapters/memory_repository.py
 # Mô tả: Lớp Adapter - Cung cấp một triển khai cụ thể cho IGameRepository.
@@ -8,8 +7,10 @@ from typing import Optional, Dict
 from ..entities import Game
 from ..interfaces import IGameRepository
 
+
 class MemoryGameRepository(IGameRepository):
     """Lưu trữ trạng thái các ván game trong bộ nhớ (dictionary)."""
+
     _games: Dict[int, Game] = {}
 
     def get_game(self, channel_id: int) -> Optional[Game]:

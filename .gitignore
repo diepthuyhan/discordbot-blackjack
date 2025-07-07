@@ -1,0 +1,53 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.so
+
+# Virtualenv
+venv/
+env/
+ENV/
+.venv/
+
+# VSCode
+.vscode/
+
+# Mac/Linux/Windows system files
+.DS_Store
+Thumbs.db
+
+# Env & secrets
+.env
+.env.*
+
+# Log files
+*.log
+logs/
+
+# Test/coverage
+.coverage
+htmlcov/
+.tox/
+.pytest_cache/
+
+# Misc
+*.sqlite3
+*.db
+*.bak
+*.swp
+*.swo
+
+# Node/npm (nếu có frontend)
+node_modules/
+
+# Ignore compiled Cython files
+*.c
+*.cpp
+*.cxx
+*.h
+*.hpp
+
+# Ignore Jupyter Notebook checkpoints
+.ipynb_checkpoints/ 

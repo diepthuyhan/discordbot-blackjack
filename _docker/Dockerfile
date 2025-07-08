@@ -1,5 +1,5 @@
 # syntax=docker/dockerfile:1
-FROM python:3.11-slim AS base
+FROM python:3.12.11-slim AS base
 
 # Cài đặt biến môi trường không sinh ra pyc
 ENV PYTHONDONTWRITEBYTECODE=1

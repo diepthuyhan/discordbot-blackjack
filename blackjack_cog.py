@@ -9,7 +9,7 @@ from blackjack.use_cases import GameUseCase
 from blackjack.adapters.discord_presenter import DiscordPresenter
 from blackjack.entities import GameState
 import asyncio
-from settings import WAITING_ROOM_TIMEOUT
+from settings import WAITING_ROOM_TIMEOUT, COMMAND_PREFIX
 import logging
 from datetime import datetime
 
@@ -91,32 +91,32 @@ class BlackjackCog(commands.Cog):
         )
 
         embed.add_field(
-            name="`!blackjack` hoặc `!bj`",
+            name=f"`{COMMAND_PREFIX}blackjack` hoặc `{COMMAND_PREFIX}bj`",
             value="Bắt đầu một phòng chờ mới để mọi người cùng tham gia.",
             inline=False,
         )
         embed.add_field(
-            name="`!join`",
+            name=f"`{COMMAND_PREFIX}join`",
             value="Tham gia vào phòng chờ đang mở trong kênh này.",
             inline=False,
         )
         embed.add_field(
-            name="`!start`",
+            name=f"`{COMMAND_PREFIX}start`",
             value="Bắt đầu ván đấu. (Chỉ người tạo phòng chờ mới dùng được)",
             inline=False,
         )
         embed.add_field(
-            name="`!hit`",
+            name=f"`{COMMAND_PREFIX}hit`",
             value="Rút thêm một lá bài khi đến lượt của bạn.",
             inline=False,
         )
         embed.add_field(
-            name="`!stand`",
+            name=f"`{COMMAND_PREFIX}stand`",
             value="Dằn bài, không rút nữa và kết thúc lượt của bạn.",
             inline=False,
         )
         embed.add_field(
-            name="`!end` hoặc `!stop`",
+            name=f"`{COMMAND_PREFIX}end` hoặc `{COMMAND_PREFIX}stop`",
             value="Buộc kết thúc ván chơi hiện tại. (Chỉ người tạo phòng hoặc admin)",
             inline=False,
         )

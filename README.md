@@ -1,3 +1,4 @@
+# AI CODE - AI Gen
 # 🎮 Discord Blackjack Bot
 
 A Discord bot for playing Blackjack (Xì Dách) with privacy-focused design - player cards are sent via DM while only current turn and dealer info are shown publicly.

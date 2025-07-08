@@ -96,6 +96,176 @@ class DiscordPresenter:
 
         return embed
 
+    def create_channel_embed(self, game: Game) -> discord.Embed:
+        """Tạo embed chỉ hiển thị trên channel: lượt của ai và điểm nhà cái."""
+        if game.state == GameState.WAITING_FOR_PLAYERS:
+            return self.create_waiting_embed(game)
+
+        title = "♦️ Ván Xì Dách đang diễn ra! ♥️"
+        color = discord.Color.gold()
+
+        if game.state == GameState.GAME_OVER:
+            title = "🏁 Ván Xì Dách đã kết thúc! 🏁"
+            color = discord.Color.dark_red()
+
+        embed = discord.Embed(title=title, color=color)
+
+        # Hiển thị bài của nhà cái
+        hide_dealer_card = game.state != GameState.GAME_OVER
+        dealer_hand_str = self._format_hand(game.dealer, hide_one_card=hide_dealer_card)
+        dealer_value = (
+            game.dealer.hand.value
+            if not hide_dealer_card
+            else game.dealer.hand.cards[0].value
+        )
+        dealer_status = ""
+        if game.state == GameState.GAME_OVER:
+            if game.dealer.hand.value > 21:
+                dealer_status = " - Bù (Busted!)"
+            elif game.dealer.hand.is_blackjack():
+                dealer_status = " - Xì Dách (Blackjack!)"
+
+        embed.add_field(
+            name=f"**Nhà Cái** (Điểm: {dealer_value}{dealer_status})",
+            value=f"`{dealer_hand_str}`",
+            inline=False,
+        )
+
+        # Hiển thị lượt của ai
+        current_player = game.get_current_player()
+        if current_player:
+            embed.add_field(
+                name="🎯 Lượt hiện tại",
+                value=f"**{current_player.name}** đang chơi\nDùng lệnh `!hit` để rút hoặc `!stand` để dằn.",
+                inline=False,
+            )
+        elif game.state == GameState.DEALER_TURN:
+            embed.add_field(
+                name="🎯 Lượt hiện tại",
+                value="**Nhà Cái** đang chơi...",
+                inline=False,
+            )
+        elif game.state == GameState.GAME_OVER:
+            embed.add_field(
+                name="🏁 Kết quả cuối cùng",
+                value="Ván đã kết thúc! Kiểm tra DM để xem kết quả chi tiết.",
+                inline=False,
+            )
+
+        if game.state == GameState.GAME_OVER:
+            embed.set_footer(text="Gõ !blackjack để bắt đầu ván mới.")
+        else:
+            embed.set_footer(text="Điểm của bạn được gửi qua DM riêng.")
+
+        return embed
+
+    def create_player_dm_embed(self, game: Game, player: Player) -> discord.Embed:
+        """Tạo embed gửi qua DM cho từng người chơi với điểm của họ."""
+        embed = discord.Embed(
+            title="🎮 Bài của bạn",
+            description=f"Ván Xì Dách tại kênh <#{game.channel_id}>",
+            color=discord.Color.blue(),
+        )
+
+        # Hiển thị bài của người chơi
+        player_hand_str = self._format_hand(player)
+        player_status = self._get_player_status(game, player)
+
+        embed.add_field(
+            name=f"**Bài của bạn** (Điểm: {player.hand.value}{player_status})",
+            value=f"`{player_hand_str}`",
+            inline=False,
+        )
+
+        # Hiển thị bài của nhà cái (chỉ lá đầu tiên nếu chưa kết thúc)
+        hide_dealer_card = game.state != GameState.GAME_OVER
+        dealer_hand_str = self._format_hand(game.dealer, hide_one_card=hide_dealer_card)
+        dealer_value = (
+            game.dealer.hand.value
+            if not hide_dealer_card
+            else game.dealer.hand.cards[0].value
+        )
+
+        embed.add_field(
+            name=f"**Nhà Cái** (Điểm: {dealer_value})",
+            value=f"`{dealer_hand_str}`",
+            inline=False,
+        )
+
+        # Kết quả nếu game đã kết thúc
+        if game.state == GameState.GAME_OVER:
+            result = game.results.get(player.id)
+            if result == GameResult.PLAYER_WINS:
+                embed.add_field(
+                    name="🎉 Kết quả",
+                    value="**Bạn đã thắng!** 🎉",
+                    inline=False,
+                )
+            elif result == GameResult.DEALER_WINS:
+                embed.add_field(
+                    name="😢 Kết quả",
+                    value="**Bạn đã thua!** 😢",
+                    inline=False,
+                )
+            else:
+                embed.add_field(
+                    name="🤝 Kết quả",
+                    value="**Hòa!** 🤝",
+                    inline=False,
+                )
+
+        # Hướng dẫn
+        if game.get_current_player() == player:
+            embed.set_footer(text="Lượt của bạn! Dùng !hit hoặc !stand trong kênh.")
+        elif game.state == GameState.GAME_OVER:
+            embed.set_footer(text="Ván đã kết thúc. Gõ !blackjack để bắt đầu ván mới.")
+        else:
+            embed.set_footer(text="Chờ lượt của bạn...")
+
+        return embed
+
+    def create_final_result_embed(self, game: Game) -> discord.Embed:
+        """Tạo embed hiển thị kết quả cuối cùng trên channel."""
+        embed = discord.Embed(
+            title="🏁 Kết quả Ván Xì Dách 🏁",
+            color=discord.Color.dark_red(),
+        )
+
+        # Hiển thị bài của nhà cái
+        dealer_hand_str = self._format_hand(game.dealer)
+        dealer_status = ""
+        if game.dealer.hand.value > 21:
+            dealer_status = " - Bù (Busted!)"
+        elif game.dealer.hand.is_blackjack():
+            dealer_status = " - Xì Dách (Blackjack!)"
+
+        embed.add_field(
+            name=f"**Nhà Cái** (Điểm: {game.dealer.hand.value}{dealer_status})",
+            value=f"`{dealer_hand_str}`",
+            inline=False,
+        )
+
+        # Hiển thị kết quả của từng người chơi
+        results_text = ""
+        for player in game.players.values():
+            result = game.results.get(player.id)
+            if result == GameResult.PLAYER_WINS:
+                results_text += f"🎉 **{player.name}**: Thắng!\n"
+            elif result == GameResult.DEALER_WINS:
+                results_text += f"😢 **{player.name}**: Thua!\n"
+            else:
+                results_text += f"🤝 **{player.name}**: Hòa!\n"
+
+        embed.add_field(
+            name="📊 Kết quả",
+            value=results_text,
+            inline=False,
+        )
+
+        embed.set_footer(text="Gõ !blackjack để bắt đầu ván mới.")
+
+        return embed
+
     def create_waiting_embed(self, game: Game) -> discord.Embed:
         """Tạo embed cho phòng chờ."""
         embed = discord.Embed(

@@ -52,13 +52,15 @@ class BlackjackCog(commands.Cog):
             user = await self.bot.fetch_user(user_id)
             # Thử gửi một tin nhắn test để kiểm tra
             current_date = datetime.now().strftime("%d/%m/%Y")
-            
+
             test_embed = discord.Embed(
                 title="🎮 Chào mừng bạn đến với Xì Dách Bot!",
                 description=f"Xin chào! Đây là tin nhắn kiểm tra để đảm bảo bot có thể gửi thông tin game cho bạn.\n\n📅 Ngày: {current_date}\n🎲 Sẵn sàng chơi Xì Dách chưa?",
                 color=discord.Color.green(),
             )
-            test_embed.set_footer(text="Bot sẽ gửi thông tin bài của bạn qua đây trong khi chơi!")
+            test_embed.set_footer(
+                text="Bot sẽ gửi thông tin bài của bạn qua đây trong khi chơi!"
+            )
             await user.send(embed=test_embed)
             return True
         except discord.Forbidden:
@@ -244,20 +246,20 @@ class BlackjackCog(commands.Cog):
         self.logger.info(
             f"Game bắt đầu ở channel {ctx.channel.id} với {len(players_data)} người chơi."
         )
-        
+
         # Hiển thị trạng thái trên channel
         embed = self.presenter.create_channel_embed(game)
         await ctx.send(embed=embed)
-        
+
         # Gửi DM cho tất cả người chơi
         await self._send_dm_to_all_players(game, self.presenter.create_player_dm_embed)
-        
+
         # Nếu game kết thúc ngay lập tức (ví dụ: mọi người đều có blackjack)
         if game.state == GameState.GAME_OVER:
             # Hiển thị kết quả cuối cùng trên channel
             final_embed = self.presenter.create_final_result_embed(game)
             await ctx.send(embed=final_embed)
-            
+
             self.use_case.end_game(ctx.channel.id)
             if ctx.channel.id in self.game_starters:
                 del self.game_starters[ctx.channel.id]
@@ -271,19 +273,21 @@ class BlackjackCog(commands.Cog):
         """Rút thêm một lá bài."""
         try:
             game = self.use_case.player_action(ctx.channel.id, ctx.author.id, "hit")
-            
+
             # Hiển thị trạng thái trên channel
             embed = self.presenter.create_channel_embed(game)
             await ctx.send(embed=embed)
-            
+
             # Gửi DM cho tất cả người chơi
-            await self._send_dm_to_all_players(game, self.presenter.create_player_dm_embed)
+            await self._send_dm_to_all_players(
+                game, self.presenter.create_player_dm_embed
+            )
 
             if game.state == GameState.GAME_OVER:
                 # Hiển thị kết quả cuối cùng trên channel
                 final_embed = self.presenter.create_final_result_embed(game)
                 await ctx.send(embed=final_embed)
-                
+
                 self.use_case.end_game(ctx.channel.id)
                 if ctx.channel.id in self.game_starters:
                     del self.game_starters[ctx.channel.id]
@@ -296,19 +300,21 @@ class BlackjackCog(commands.Cog):
         """Dừng, không rút bài nữa."""
         try:
             game = self.use_case.player_action(ctx.channel.id, ctx.author.id, "stand")
-            
+
             # Hiển thị trạng thái trên channel
             embed = self.presenter.create_channel_embed(game)
             await ctx.send(embed=embed)
-            
+
             # Gửi DM cho tất cả người chơi
-            await self._send_dm_to_all_players(game, self.presenter.create_player_dm_embed)
+            await self._send_dm_to_all_players(
+                game, self.presenter.create_player_dm_embed
+            )
 
             if game.state == GameState.GAME_OVER:
                 # Hiển thị kết quả cuối cùng trên channel
                 final_embed = self.presenter.create_final_result_embed(game)
                 await ctx.send(embed=final_embed)
-                
+
                 self.use_case.end_game(ctx.channel.id)
                 if ctx.channel.id in self.game_starters:
                     del self.game_starters[ctx.channel.id]

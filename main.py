@@ -40,7 +40,9 @@ def setup_dependencies() -> BlackjackCog:
     intents.members = True  # Cần để lấy display_name
 
     # Xóa lệnh help mặc định để dùng lệnh tùy chỉnh trong Cog
-    bot = commands.Bot(command_prefix=COMMAND_PREFIX, intents=intents, help_command=None)
+    bot = commands.Bot(
+        command_prefix=COMMAND_PREFIX, intents=intents, help_command=None
+    )
     blackjack_cog = BlackjackCog(bot, use_case=game_use_case, presenter=game_presenter)
     return blackjack_cog
 

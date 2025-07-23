@@ -30,12 +30,12 @@ class BlackjackCog(commands.Cog):
         self.game_starters = {}
         # Lưu trữ task timeout cho từng phòng chờ
         self.waiting_room_timeouts = {}  # channel_id: asyncio.Task
-        self.player_turn_timeouts = {}   # channel_id: asyncio.Task
+        self.player_turn_timeouts = {}  # channel_id: asyncio.Task
         self.logger = logging.getLogger("blackjack-bot.cog")
 
     async def _send_message(self, ctx, *args, **kwargs):
         # Helper to send message correctly for both classic and slash commands
-        if hasattr(ctx, 'interaction') and ctx.interaction is not None:
+        if hasattr(ctx, "interaction") and ctx.interaction is not None:
             interaction = ctx.interaction
             if not interaction.response.is_done():
                 await interaction.response.send_message(*args, **kwargs)
@@ -61,13 +61,17 @@ class BlackjackCog(commands.Cog):
             )
         self.waiting_room_timeouts.pop(channel_id, None)
 
-    async def _start_player_turn_timeout(self, channel_id: int, player_id: int, ctx: commands.Context):
+    async def _start_player_turn_timeout(
+        self, channel_id: int, player_id: int, ctx: commands.Context
+    ):
         self._cancel_player_turn_timeout(channel_id)
         self.player_turn_timeouts[channel_id] = asyncio.create_task(
             self._player_turn_timeout(channel_id, player_id, ctx)
         )
 
-    async def _player_turn_timeout(self, channel_id: int, player_id: int, ctx: commands.Context):
+    async def _player_turn_timeout(
+        self, channel_id: int, player_id: int, ctx: commands.Context
+    ):
         await asyncio.sleep(self.PLAYER_TURN_TIMEOUT)
         game = self.use_case.repo.get_game(channel_id)
         if (
@@ -76,7 +80,9 @@ class BlackjackCog(commands.Cog):
             and game.get_current_player() is not None
             and game.get_current_player().id == player_id
         ):
-            await self._send_message(ctx, f"⏰ <@{player_id}> đã hết thời gian lượt chơi và bị bỏ lượt!")
+            await self._send_message(
+                ctx, f"⏰ <@{player_id}> đã hết thời gian lượt chơi và bị bỏ lượt!"
+            )
             try:
                 game = self.use_case.player_action(channel_id, player_id, "stand")
                 embed = self.presenter.create_channel_embed(game)
@@ -90,9 +96,13 @@ class BlackjackCog(commands.Cog):
                 else:
                     current = game.get_current_player()
                     if current:
-                        await self._start_player_turn_timeout(channel_id, current.id, ctx)
+                        await self._start_player_turn_timeout(
+                            channel_id, current.id, ctx
+                        )
             except Exception as e:
-                self.logger.warning(f"Lỗi khi tự động stand cho player {player_id} ở channel {channel_id}: {e}")
+                self.logger.warning(
+                    f"Lỗi khi tự động stand cho player {player_id} ở channel {channel_id}: {e}"
+                )
         self.player_turn_timeouts.pop(channel_id, None)
 
     def _cancel_player_turn_timeout(self, channel_id: int):
@@ -119,8 +129,9 @@ class BlackjackCog(commands.Cog):
             GameState.PLAYERS_TURN,
             GameState.DEALER_TURN,
         ):
-            await self._send_message(ctx,
-                "❌ Đã có một phòng chờ/game đang diễn ra trong kênh này. Hãy kết thúc ván hiện tại trước khi tạo mới."
+            await self._send_message(
+                ctx,
+                "❌ Đã có một phòng chờ/game đang diễn ra trong kênh này. Hãy kết thúc ván hiện tại trước khi tạo mới.",
             )
             self.logger.warning(
                 f"Channel {ctx.channel.id} đã có game active, không tạo mới."
@@ -151,7 +162,7 @@ class BlackjackCog(commands.Cog):
             )
             # Gửi thông báo join thành công ngay lập tức (và defer nếu là slash command)
             join_msg = f"{ctx.author.display_name} đã tham gia ván đấu!"
-            if hasattr(ctx, 'interaction') and ctx.interaction is not None:
+            if hasattr(ctx, "interaction") and ctx.interaction is not None:
                 interaction = ctx.interaction
                 if not interaction.response.is_done():
                     await interaction.response.defer(thinking=False)
@@ -171,8 +182,8 @@ class BlackjackCog(commands.Cog):
                     self.waiting_room_timeouts[ctx.channel.id].cancel()
                     del self.waiting_room_timeouts[ctx.channel.id]
             else:
-                await self._send_message(ctx,
-                    f"{ctx.author.display_name}, bạn đã ở trong phòng chờ rồi."
+                await self._send_message(
+                    ctx, f"{ctx.author.display_name}, bạn đã ở trong phòng chờ rồi."
                 )
         except RuntimeError as e:
             self.logger.warning(
@@ -185,7 +196,9 @@ class BlackjackCog(commands.Cog):
         """Bắt đầu ván chơi với những người đã tham gia."""
         starter = self.game_starters.get(ctx.channel.id)
         if starter != ctx.author.id:
-            await self._send_message(ctx, "Chỉ người tạo phòng chờ mới có thể bắt đầu ván đấu.")
+            await self._send_message(
+                ctx, "Chỉ người tạo phòng chờ mới có thể bắt đầu ván đấu."
+            )
             self.logger.warning(
                 f"User {ctx.author.id} cố gắng start game ở channel {ctx.channel.id} nhưng không phải starter."
             )
@@ -209,13 +222,15 @@ class BlackjackCog(commands.Cog):
             f"Game bắt đầu ở channel {ctx.channel.id} với {len(players_data)} người chơi."
         )
         # Gửi bài riêng cho chính người gọi lệnh nếu là slash command
-        if hasattr(ctx, 'interaction') and ctx.interaction is not None:
+        if hasattr(ctx, "interaction") and ctx.interaction is not None:
             interaction = ctx.interaction
             player = game.players.get(ctx.author.id)
             if player:
                 player_embed = self.presenter.create_player_dm_embed(game, player)
                 if not interaction.response.is_done():
-                    await interaction.response.send_message(embed=player_embed, ephemeral=True)
+                    await interaction.response.send_message(
+                        embed=player_embed, ephemeral=True
+                    )
                 else:
                     await interaction.followup.send(embed=player_embed, ephemeral=True)
         else:
@@ -250,12 +265,16 @@ class BlackjackCog(commands.Cog):
             player = game.players.get(ctx.author.id)
             if player:
                 player_embed = self.presenter.create_player_dm_embed(game, player)
-                if hasattr(ctx, 'interaction') and ctx.interaction is not None:
+                if hasattr(ctx, "interaction") and ctx.interaction is not None:
                     interaction = ctx.interaction
                     if not interaction.response.is_done():
-                        await interaction.response.send_message(embed=player_embed, ephemeral=True)
+                        await interaction.response.send_message(
+                            embed=player_embed, ephemeral=True
+                        )
                     else:
-                        await interaction.followup.send(embed=player_embed, ephemeral=True)
+                        await interaction.followup.send(
+                            embed=player_embed, ephemeral=True
+                        )
                 else:
                     await self._send_message(ctx, embed=player_embed)
             # Sau đó gửi trạng thái toàn bộ bàn chơi (luôn công khai)
@@ -271,7 +290,9 @@ class BlackjackCog(commands.Cog):
             else:
                 current = game.get_current_player()
                 if current:
-                    await self._start_player_turn_timeout(ctx.channel.id, current.id, ctx)
+                    await self._start_player_turn_timeout(
+                        ctx.channel.id, current.id, ctx
+                    )
         except (ValueError, PermissionError) as e:
             await self._send_message(ctx, f"{ctx.author.mention}, {e}")
 
@@ -293,7 +314,9 @@ class BlackjackCog(commands.Cog):
             else:
                 current = game.get_current_player()
                 if current:
-                    await self._start_player_turn_timeout(ctx.channel.id, current.id, ctx)
+                    await self._start_player_turn_timeout(
+                        ctx.channel.id, current.id, ctx
+                    )
         except (ValueError, PermissionError) as e:
             await self._send_message(ctx, f"{ctx.author.mention}, {e}")
 
@@ -324,17 +347,23 @@ class BlackjackCog(commands.Cog):
             )
 
     # --- SLASH COMMANDS ---
-    @app_commands.command(name="blackjack", description="Bắt đầu một phòng chờ game Xì Dách.")
+    @app_commands.command(
+        name="blackjack", description="Bắt đầu một phòng chờ game Xì Dách."
+    )
     async def slash_blackjack(self, interaction: discord.Interaction):
         ctx = await self.bot.get_context(interaction)
         await self.blackjack(ctx)
 
-    @app_commands.command(name="join", description="Tham gia vào một ván Xì Dách đang chờ.")
+    @app_commands.command(
+        name="join", description="Tham gia vào một ván Xì Dách đang chờ."
+    )
     async def slash_join(self, interaction: discord.Interaction):
         ctx = await self.bot.get_context(interaction)
         await self.join(ctx)
 
-    @app_commands.command(name="start", description="Bắt đầu ván chơi với những người đã tham gia.")
+    @app_commands.command(
+        name="start", description="Bắt đầu ván chơi với những người đã tham gia."
+    )
     async def slash_start(self, interaction: discord.Interaction):
         ctx = await self.bot.get_context(interaction)
         await self.start(ctx)
@@ -354,20 +383,26 @@ class BlackjackCog(commands.Cog):
         ctx = await self.bot.get_context(interaction)
         await self.end_game_command(ctx)
 
-    @app_commands.command(name="myhand", description="Xem bài hiện tại của bạn (ephemeral)")
+    @app_commands.command(
+        name="myhand", description="Xem bài hiện tại của bạn (ephemeral)"
+    )
     async def slash_myhand(self, interaction: discord.Interaction):
         """Trả về bài hiện tại của người gọi (ephemeral)."""
         ctx = await self.bot.get_context(interaction)
         game = self.use_case.repo.get_game(ctx.channel.id)
         if not game or interaction.user.id not in game.players:
-            await interaction.response.send_message("Bạn chưa tham gia hoặc chưa có ván nào đang diễn ra!", ephemeral=True)
+            await interaction.response.send_message(
+                "Bạn chưa tham gia hoặc chưa có ván nào đang diễn ra!", ephemeral=True
+            )
             return
         player = game.players.get(interaction.user.id)
         if player:
             player_embed = self.presenter.create_player_dm_embed(game, player)
             await interaction.response.send_message(embed=player_embed, ephemeral=True)
         else:
-            await interaction.response.send_message("Không tìm thấy bài của bạn!", ephemeral=True)
+            await interaction.response.send_message(
+                "Không tìm thấy bài của bạn!", ephemeral=True
+            )
 
     @commands.command(name="help")
     async def help_command(self, ctx: commands.Context):
@@ -412,7 +447,9 @@ class BlackjackCog(commands.Cog):
             value="Buộc kết thúc ván chơi hiện tại. (Chỉ người tạo phòng hoặc admin)",
             inline=False,
         )
-        embed.set_footer(text="Hãy dùng slash command (gõ /) để xem danh sách lệnh. Chúc bạn chơi game vui vẻ!")
+        embed.set_footer(
+            text="Hãy dùng slash command (gõ /) để xem danh sách lệnh. Chúc bạn chơi game vui vẻ!"
+        )
         await self._send_message(ctx, embed=embed)
 
     @app_commands.command(name="help", description="Hiển thị bảng hướng dẫn các lệnh.")
@@ -457,5 +494,7 @@ class BlackjackCog(commands.Cog):
             value="Buộc kết thúc ván chơi hiện tại. (Chỉ người tạo phòng hoặc admin)",
             inline=False,
         )
-        embed.set_footer(text="Hãy dùng slash command (gõ /) để xem danh sách lệnh. Chúc bạn chơi game vui vẻ!")
+        embed.set_footer(
+            text="Hãy dùng slash command (gõ /) để xem danh sách lệnh. Chúc bạn chơi game vui vẻ!"
+        )
         await interaction.response.send_message(embed=embed, ephemeral=True)

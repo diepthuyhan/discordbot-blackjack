@@ -90,7 +90,7 @@ class DiscordPresenter:
         # Hướng dẫn
         current_player = game.get_current_player()
         if current_player:
-            footer_text = f"Lượt của {current_player.name}. Dùng lệnh `{COMMAND_PREFIX}hit` để rút hoặc `{COMMAND_PREFIX}stand` để dằn."
+            footer_text = f"Lượt của {current_player.name}. Dùng lệnh `{COMMAND_PREFIX}hit` để xem bài hoặc `{COMMAND_PREFIX}hit` để rút hoặc `{COMMAND_PREFIX}stand` để dằn."
             embed.set_footer(text=footer_text)
         elif game.state == GameState.GAME_OVER:
             embed.set_footer(text=f"Gõ {COMMAND_PREFIX}blackjack để bắt đầu ván mới.")
@@ -279,7 +279,7 @@ class DiscordPresenter:
         """Tạo embed cho phòng chờ."""
         embed = discord.Embed(
             title="🎲 Phòng chờ Xì Dách 🎲",
-            description="Mọi người ơi, vào chơi nào! Gõ `!join` để tham gia.\nChủ phòng gõ `!start` để bắt đầu.",
+            description="Mọi người ơi, vào chơi nào! Gõ `/join` để tham gia.\nChủ phòng gõ `/start` để bắt đầu.",
             color=discord.Color.green(),
         )
         player_list = "\n".join([p.name for p in game.players.values()])

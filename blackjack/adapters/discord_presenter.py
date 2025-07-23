@@ -5,6 +5,7 @@
 # ==============================================================================
 import discord
 from ..entities import Game, GameState, GameResult, Player
+from settings import COMMAND_PREFIX
 
 
 class DiscordPresenter:
@@ -89,10 +90,10 @@ class DiscordPresenter:
         # Hướng dẫn
         current_player = game.get_current_player()
         if current_player:
-            footer_text = f"Lượt của {current_player.name}. Dùng lệnh `!hit` để rút hoặc `!stand` để dằn."
+            footer_text = f"Lượt của {current_player.name}. Dùng lệnh `{COMMAND_PREFIX}hit` để rút hoặc `{COMMAND_PREFIX}stand` để dằn."
             embed.set_footer(text=footer_text)
         elif game.state == GameState.GAME_OVER:
-            embed.set_footer(text="Gõ !blackjack để bắt đầu ván mới.")
+            embed.set_footer(text=f"Gõ {COMMAND_PREFIX}blackjack để bắt đầu ván mới.")
 
         return embed
 
@@ -136,7 +137,7 @@ class DiscordPresenter:
         if current_player:
             embed.add_field(
                 name="🎯 Lượt hiện tại",
-                value=f"**{current_player.name}** đang chơi\nDùng lệnh `!hit` để rút hoặc `!stand` để dằn.",
+                value=f"**{current_player.name}** đang chơi\nDùng lệnh `{COMMAND_PREFIX}hit` để rút hoặc `{COMMAND_PREFIX}stand` để dằn.",
                 inline=False,
             )
         elif game.state == GameState.DEALER_TURN:
@@ -153,7 +154,7 @@ class DiscordPresenter:
             )
 
         if game.state == GameState.GAME_OVER:
-            embed.set_footer(text="Gõ !blackjack để bắt đầu ván mới.")
+            embed.set_footer(text=f"Gõ {COMMAND_PREFIX}blackjack để bắt đầu ván mới.")
         else:
             embed.set_footer(text="Điểm của bạn được gửi qua DM riêng.")
 
@@ -216,16 +217,15 @@ class DiscordPresenter:
 
         # Hướng dẫn
         if game.get_current_player() == player:
-            embed.set_footer(text="Lượt của bạn! Dùng !hit hoặc !stand trong kênh.")
+            embed.set_footer(text=f"Lượt của bạn! Dùng {COMMAND_PREFIX}hit hoặc {COMMAND_PREFIX}stand trong kênh.")
         elif game.state == GameState.GAME_OVER:
-            embed.set_footer(text="Ván đã kết thúc. Gõ !blackjack để bắt đầu ván mới.")
+            embed.set_footer(text=f"Ván đã kết thúc. Gõ {COMMAND_PREFIX}blackjack để bắt đầu ván mới.")
         else:
             embed.set_footer(text="Chờ lượt của bạn...")
 
         return embed
 
     def create_final_result_embed(self, game: Game) -> discord.Embed:
-        """Tạo embed hiển thị kết quả cuối cùng trên channel."""
         embed = discord.Embed(
             title="🏁 Kết quả Ván Xì Dách 🏁",
             color=discord.Color.dark_red(),
@@ -245,16 +245,19 @@ class DiscordPresenter:
             inline=False,
         )
 
-        # Hiển thị kết quả của từng người chơi
+        # Hiển thị kết quả chi tiết của từng người chơi
         results_text = ""
         for player in game.players.values():
             result = game.results.get(player.id)
+            hand_str = self._format_hand(player)
+            score = player.hand.value
             if result == GameResult.PLAYER_WINS:
-                results_text += f"🎉 **{player.name}**: Thắng!\n"
+                outcome = "🎉 Thắng!"
             elif result == GameResult.DEALER_WINS:
-                results_text += f"😢 **{player.name}**: Thua!\n"
+                outcome = "😢 Thua!"
             else:
-                results_text += f"🤝 **{player.name}**: Hòa!\n"
+                outcome = "🤝 Hòa!"
+            results_text += f"**{player.name}** (Điểm: {score}) `{hand_str}`: {outcome}\n"
 
         embed.add_field(
             name="📊 Kết quả",
@@ -262,7 +265,7 @@ class DiscordPresenter:
             inline=False,
         )
 
-        embed.set_footer(text="Gõ !blackjack để bắt đầu ván mới.")
+        embed.set_footer(text=f"Gõ {COMMAND_PREFIX}blackjack để bắt đầu ván mới.")
 
         return embed
 

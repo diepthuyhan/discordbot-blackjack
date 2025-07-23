@@ -23,6 +23,13 @@ logging.basicConfig(
 )
 logger = logging.getLogger("blackjack-bot")
 
+# Tải biến môi trường từ file .env
+load_dotenv()
+TOKEN = os.getenv("DISCORD_TOKEN")
+
+if not TOKEN:
+    logger.error("Lỗi: Vui lòng cung cấp DISCORD_TOKEN trong file .env")
+    exit(1)
 
 # --- Dependency Injection Setup ---
 # Đây là nơi chúng ta "tiêm" các phụ thuộc vào nhau.
@@ -49,14 +56,6 @@ def setup_dependencies() -> BlackjackCog:
 
 # --- Main Execution ---
 async def main():
-    # Tải biến môi trường từ file .env
-    load_dotenv()
-    TOKEN = os.getenv("DISCORD_TOKEN")
-
-    if not TOKEN:
-        logger.error("Lỗi: Vui lòng cung cấp DISCORD_TOKEN trong file .env")
-        return
-
     # Thiết lập các thành phần
     blackjack_cog = setup_dependencies()
 

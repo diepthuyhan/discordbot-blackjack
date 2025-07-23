@@ -63,6 +63,9 @@ class BlackjackCog(commands.Cog):
         self, channel_id: int, player_id: int, ctx: commands.Context
     ):
         self._cancel_player_turn_timeout(channel_id)
+        # Gửi mention khi tới lượt mới
+        mention_msg = f"<@{player_id}>, tới lượt bạn!"
+        await self._send_message(ctx, mention_msg)
         self.player_turn_timeouts[channel_id] = asyncio.create_task(
             self._player_turn_timeout(channel_id, player_id, ctx)
         )

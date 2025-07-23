@@ -1,4 +1,7 @@
 import os
+from dotenv import load_dotenv
+
+load_dotenv()
 
 # Timeout phòng chờ (giây)
 WAITING_ROOM_TIMEOUT = int(os.getenv("BLACKJACK_WAITING_ROOM_TIMEOUT", 300))
@@ -7,4 +10,4 @@ WAITING_ROOM_TIMEOUT = int(os.getenv("BLACKJACK_WAITING_ROOM_TIMEOUT", 300))
 LOG_LEVEL = os.getenv("BLACKJACK_LOG_LEVEL", "INFO")
 
 # Command prefix
-COMMAND_PREFIX = os.getenv("BLACKJACK_COMMAND_PREFIX", "!")
+COMMAND_PREFIX = os.getenv("BLACKJACK_COMMAND_PREFIX", "/")

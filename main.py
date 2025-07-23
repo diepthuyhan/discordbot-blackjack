@@ -23,15 +23,6 @@ logging.basicConfig(
 )
 logger = logging.getLogger("blackjack-bot")
 
-# Tải biến môi trường từ file .env
-load_dotenv()
-TOKEN = os.getenv("DISCORD_TOKEN")
-
-if not TOKEN:
-    logger.error("Lỗi: Vui lòng cung cấp DISCORD_TOKEN trong file .env")
-    exit(1)
-
-
 # --- Dependency Injection Setup ---
 # Đây là nơi chúng ta "tiêm" các phụ thuộc vào nhau.
 # Ví dụ, UseCase cần một Repository, và Cog cần UseCase và Presenter.
@@ -57,18 +48,28 @@ def setup_dependencies() -> BlackjackCog:
 
 # --- Main Execution ---
 async def main():
+    # Tải biến môi trường từ file .env
+    load_dotenv()
+    TOKEN = os.getenv('DISCORD_TOKEN')
+
+    if not TOKEN:
+        logger.error("Lỗi: Vui lòng cung cấp DISCORD_TOKEN trong file .env")
+        return
+
     # Thiết lập các thành phần
     blackjack_cog = setup_dependencies()
-
+    
     @blackjack_cog.bot.event
     async def on_ready():
-        logger.info(f"Bot đã đăng nhập với tên {blackjack_cog.bot.user}")
-        logger.info("Bot đã sẵn sàng để nhận lệnh!")
-        print("------")
+        logger.info(f'Bot đã đăng nhập với tên {blackjack_cog.bot.user}')
+        logger.info('Bot đã sẵn sàng để nhận lệnh!')
+        await blackjack_cog.bot.tree.sync()
+        logger.info('Đã đồng bộ slash commands.')
+        print('------')
 
     # Thêm Cog vào bot và chạy
     await blackjack_cog.bot.add_cog(blackjack_cog)
-    logger.info("Đã thêm BlackjackCog vào bot.")
+    logger.info('Đã thêm BlackjackCog vào bot.')
     await blackjack_cog.bot.start(TOKEN)
 
 

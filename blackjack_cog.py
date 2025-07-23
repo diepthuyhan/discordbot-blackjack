@@ -10,15 +10,13 @@ from blackjack.use_cases import GameUseCase
 from blackjack.adapters.discord_presenter import DiscordPresenter
 from blackjack.entities import GameState
 import asyncio
-from settings import WAITING_ROOM_TIMEOUT, COMMAND_PREFIX
+from settings import WAITING_ROOM_TIMEOUT, PLAYER_TURN_TIMEOUT
 import logging
 from datetime import datetime
 
 
 class BlackjackCog(commands.Cog):
     """Một Cog chứa các lệnh để chơi game Xì Dách."""
-
-    PLAYER_TURN_TIMEOUT = 60  # giây
 
     def __init__(
         self, bot: commands.Bot, use_case: GameUseCase, presenter: DiscordPresenter
@@ -72,7 +70,7 @@ class BlackjackCog(commands.Cog):
     async def _player_turn_timeout(
         self, channel_id: int, player_id: int, ctx: commands.Context
     ):
-        await asyncio.sleep(self.PLAYER_TURN_TIMEOUT)
+        await asyncio.sleep(PLAYER_TURN_TIMEOUT)
         game = self.use_case.repo.get_game(channel_id)
         if (
             game

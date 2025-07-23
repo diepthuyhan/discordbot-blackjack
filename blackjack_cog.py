@@ -17,6 +17,8 @@ from datetime import datetime
 class BlackjackCog(commands.Cog):
     """Một Cog chứa các lệnh để chơi game Xì Dách."""
 
+    PLAYER_TURN_TIMEOUT = 60  # giây
+
     def __init__(
         self, bot: commands.Bot, use_case: GameUseCase, presenter: DiscordPresenter
     ):
@@ -27,6 +29,7 @@ class BlackjackCog(commands.Cog):
         self.game_starters = {}
         # Lưu trữ task timeout cho từng phòng chờ
         self.waiting_room_timeouts = {}  # channel_id: asyncio.Task
+        self.player_turn_timeouts = {}   # channel_id: asyncio.Task
         self.logger = logging.getLogger("blackjack-bot.cog")
 
     async def _waiting_room_timeout(self, channel_id: int, ctx: commands.Context):
@@ -263,6 +266,11 @@ class BlackjackCog(commands.Cog):
             self.use_case.end_game(ctx.channel.id)
             if ctx.channel.id in self.game_starters:
                 del self.game_starters[ctx.channel.id]
+        else:
+            # Bắt đầu timeout cho lượt đầu tiên
+            current = game.get_current_player()
+            if current:
+                await self._start_player_turn_timeout(ctx.channel.id, current.id, ctx)
         # Hủy timeout nếu có
         if ctx.channel.id in self.waiting_room_timeouts:
             self.waiting_room_timeouts[ctx.channel.id].cancel()
@@ -272,6 +280,7 @@ class BlackjackCog(commands.Cog):
     async def hit(self, ctx: commands.Context):
         """Rút thêm một lá bài."""
         try:
+            self._cancel_player_turn_timeout(ctx.channel.id)
             game = self.use_case.player_action(ctx.channel.id, ctx.author.id, "hit")
 
             # Hiển thị trạng thái trên channel
@@ -291,6 +300,11 @@ class BlackjackCog(commands.Cog):
                 self.use_case.end_game(ctx.channel.id)
                 if ctx.channel.id in self.game_starters:
                     del self.game_starters[ctx.channel.id]
+            else:
+                # Bắt đầu timeout cho lượt tiếp theo
+                current = game.get_current_player()
+                if current:
+                    await self._start_player_turn_timeout(ctx.channel.id, current.id, ctx)
 
         except (ValueError, PermissionError) as e:
             await ctx.send(f"{ctx.author.mention}, {e}")
@@ -299,6 +313,7 @@ class BlackjackCog(commands.Cog):
     async def stand(self, ctx: commands.Context):
         """Dừng, không rút bài nữa."""
         try:
+            self._cancel_player_turn_timeout(ctx.channel.id)
             game = self.use_case.player_action(ctx.channel.id, ctx.author.id, "stand")
 
             # Hiển thị trạng thái trên channel
@@ -318,6 +333,11 @@ class BlackjackCog(commands.Cog):
                 self.use_case.end_game(ctx.channel.id)
                 if ctx.channel.id in self.game_starters:
                     del self.game_starters[ctx.channel.id]
+            else:
+                # Bắt đầu timeout cho lượt tiếp theo
+                current = game.get_current_player()
+                if current:
+                    await self._start_player_turn_timeout(ctx.channel.id, current.id, ctx)
 
         except (ValueError, PermissionError) as e:
             await ctx.send(f"{ctx.author.mention}, {e}")
@@ -339,6 +359,9 @@ class BlackjackCog(commands.Cog):
             if ctx.channel.id in self.waiting_room_timeouts:
                 self.waiting_room_timeouts[ctx.channel.id].cancel()
                 del self.waiting_room_timeouts[ctx.channel.id]
+            if ctx.channel.id in self.player_turn_timeouts:
+                self.player_turn_timeouts[ctx.channel.id].cancel()
+                del self.player_turn_timeouts[ctx.channel.id]
         else:
             await ctx.send("Bạn không có quyền kết thúc ván chơi này.")
             self.logger.warning(

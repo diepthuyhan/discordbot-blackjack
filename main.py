@@ -31,6 +31,7 @@ if not TOKEN:
     logger.error("Lỗi: Vui lòng cung cấp DISCORD_TOKEN trong file .env")
     exit(1)
 
+
 # --- Dependency Injection Setup ---
 # Đây là nơi chúng ta "tiêm" các phụ thuộc vào nhau.
 # Ví dụ, UseCase cần một Repository, và Cog cần UseCase và Presenter.

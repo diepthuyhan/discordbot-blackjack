@@ -217,9 +217,13 @@ class DiscordPresenter:
 
         # Hướng dẫn
         if game.get_current_player() == player:
-            embed.set_footer(text=f"Lượt của bạn! Dùng {COMMAND_PREFIX}hit hoặc {COMMAND_PREFIX}stand trong kênh.")
+            embed.set_footer(
+                text=f"Lượt của bạn! Dùng {COMMAND_PREFIX}hit hoặc {COMMAND_PREFIX}stand trong kênh."
+            )
         elif game.state == GameState.GAME_OVER:
-            embed.set_footer(text=f"Ván đã kết thúc. Gõ {COMMAND_PREFIX}blackjack để bắt đầu ván mới.")
+            embed.set_footer(
+                text=f"Ván đã kết thúc. Gõ {COMMAND_PREFIX}blackjack để bắt đầu ván mới."
+            )
         else:
             embed.set_footer(text="Chờ lượt của bạn...")
 
@@ -257,7 +261,9 @@ class DiscordPresenter:
                 outcome = "😢 Thua!"
             else:
                 outcome = "🤝 Hòa!"
-            results_text += f"**{player.name}** (Điểm: {score}) `{hand_str}`: {outcome}\n"
+            results_text += (
+                f"**{player.name}** (Điểm: {score}) `{hand_str}`: {outcome}\n"
+            )
 
         embed.add_field(
             name="📊 Kết quả",
